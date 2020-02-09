@@ -50,18 +50,18 @@ Les étapes dans un cas d'exemple :
 
 ## 1. Structurer le projet
 Créez la structure de projet suivante :
-```
-/hb-locatcars
-    /config
-        config.php
-        routes.php
-    /src
-        /service
-            ServiceContainer.php
-        /model
-        /controller
-    /template
-    index.php
+```bash
+/hb-locatcars                       # Le projet
+    /config                         # Fichiers de configuration
+        config.php                  # Configuration générale
+        routes.php                  # Les routes
+    /src                            # Les classes du projet
+        /service                    # Les services
+            ServiceContainer.php    # Le Service Container
+        /model                      # Les Models
+        /controller                 # Les Controllers
+    /template                       # Les Vues
+    index.php                       # La porte d'entrée de notre application
 ```
 
 ### Github !
@@ -90,7 +90,7 @@ git remote add origin https://.... # La ligne copiée collée
 
 Et c'est tout ! Vous êtes dorénavant capables de faire des commits dans votre projet. Pour cela, deux choix :
 
-1. **VSCode :** sur le côté, vous avez une icône, la troisième en général, qui correspond au versionning. Cliquez dessus. Pour faire un commit : saisissez quelque chose dans le champ `Message` puis tapez `Ctrl+Entrée` (ou `Cmd+Entrée` sous Mac). Validez les fenêtres éventuelles qui peuvent apparaître (en cliquant sur `Yes/Always/Toujours` quand c'est possible). Votre commit est fait ! Pour pusher (envoyer sur le serveur), vous devez cliquer sur 
+1. **VSCode :** sur le côté, vous avez une icône, la troisième en général, qui correspond au versionning. Cliquez dessus. Pour faire un commit : saisissez quelque chose dans le champ `Message` puis tapez `Ctrl+Entrée` (ou `Cmd+Entrée` sous Mac). Validez les fenêtres éventuelles qui peuvent apparaître (en cliquant sur `Yes/Always/Toujours` quand c'est possible). Votre commit est fait ! Pour pusher (envoyer sur le serveur), vous devez cliquer sur l'icône située à droite de `master`, tout en bas à gauche de VSCode. Ça peut être selon l'état du projet ou la version de VSCode un petit nuage ou une roue, ou des flèches haut/bas ou en rond... Dans tous les cas, survolant la souris dessus, ça doit indiquer "synchronize changes".
 
 
 2. **Terminal :** Dans le terminal, saisissez :
@@ -99,8 +99,6 @@ git add -A # Ajout de tous les fichiers au commit
 git commit -m "Message du commit"
 git push
 ```
-
-
 
 ## 2. Utiliser Composer pour installer un routeur
 Dans notre projet, nous voudrons accéder aux pages en indiquant une URL "REST", c'est à dire qui représente nos données, sans indiquer de fichier en particulier. C'est exactement comme on peut trouver dans des API REST : en allant sur `/users/2`, on accède à l'utilisateur #2, sans savoir si il y a un fichier `users.php`, `listUsers.php` ou quoi que ce soit d'appelé. L'idée est d'avoir des URL propres et prévisibles !
@@ -124,11 +122,102 @@ Une fois sûrs de vous, tapez dans la console la ligne indiquée dans la rubriqu
 > Rappels SemVer : les versions sont en notation SemVer (Semantic Versionning) : https://putaindecode.io/articles/semver-c-est-quoi/
 
 ### Utiliser des packages issus de Composer
-Comment fonctionne Composer ? Si 
+Comment fonctionne Composer ? Si on regarde notre projet, on voit :
+
+- un nouveau dossier : `vendor`. C'est en fait ici où sont installées les dépendances venues de Composer !
+- un nouveau fichier : `composer.json`. C'est un fichier qui contient la liste des dépendances requises pour utiliser notre projet. 
+- un autre fichier : `composer.lock`. C'est un fichier qui sert au fonctionnement de Composer, qui lui indique quelles sont les dépendances actuellement installées et dans quelles versions, pour savoir s'il doit les mettre à jour ou non. À ne jamais modifier à la main !
+
+**IMPORTANT** Nous voulons dire à Git que nous ne voulons pas commiter ce projet. C'est super important ! Les dépendances pouvant contenir plusieurs centaines de milliers de fichiers selon la taille du projet, on a aucune envie de les commiter : non seulement ce serait terriblement long à uploader, mais en plus c'est redondant, car la liste des dépendances existe dans `composer.json`. Si on veut récupérer le projet, il nous suffira alors de faire simplement `composer install` pour réinstaller les dépendances dans `vendor` !
+
+Pour dire à Git d'éviter ce dossier, créez à la racine du projet un fichier `.gitignore`. Dedans, saisissez simplement `/vendor`. Normalement, il devrait se griser dans VSCode : ça nous indique que le dossier ne sera pas commité. Parfait !
+
+C'est le moment parfait pour faire un nouveau commit. Nommez le par exemple `Add router dependancy to Composer : bramus/router`.
+
+### Dire à notre projet que nous utilisons des packages venus de Composer
+Notre routeur est enfin installé. Parfait ! Maintenant, comment l'utiliser en pratique dans notre projet ? Il va falloir l'importer dans nos fichiers. En fait, on va trouver une solution élégante pour ne pas avoir à `require_once` toutes les classes importées avec Composer (on en aurait plusieurs milliers à faire sinon !).
+
+La solution : Composer vient avec un Autoloader. C'est un fichier qui sert à charger automatiquement toutes les classes, par défaut celles du dossier `vendor` mais aussi les notres, comme on verra plus tard. Pour l'instant, on ne souhaite qu'importer les classes de `vendor`.
+
+Comme on ne veut pas polluer notre `index.php` avec de la configuration, on va gérer ça dans `config.php`:
+
+```php
+// index.php
+require_once __DIR__ . '/config/config.php';
+```
+
+```php
+// config.php
+require_once __DIR__ . '/../vendor/autoload.php';
+```
+
+Et voilà, pour le moment... C'est tout !
 
 ## 3. Utiliser notre routeur
+Notre routeur fonctionne ainsi : on déclare une "route" (c'est à dire une URL), et on indique l'action à effectuer quand cette route est tappée par un utilisateur.
+
+Pour déclarer nos routes, on va utiliser un fichier dédié pour cela, c'est plus pratique ! Ce fichier, c'est `config/routes.php`.
+
+Comme on aura besoin de nos routes dans tous le projet, on commence par importer le fichier dans `config.php` :
+
+```php
+// config.php
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/routes.php';    
+```
+
+Comme ça, en allant dans `index.php` : on importe `config.php`, qui lui importe les classes avec `autoload.php`, et notre liste de routes avec `routes.php`.
+
+### Un fichier .htaccess
+Avant toute chose, on va devoir faire une petite modification technique : jusque-là, on a vu que Apache lisait l'URL et retournait le fichier demandé (`example.com`, `example.com/users/list.php`...). Maintenant, en utilsiant un routeur, on va faire un truc un peu bizarre : dans tous les cas (que ce soit `example.com`, `example.com/users`, `example.com/cars/3`...) l'utilisateur ira sans le savoir vers `index.php`, qui appelera le routeur, qui ensuite effectuera l'action.
+
+Il va falloir dire à Apache comment gérer nos nouvelles URL (on appelle ça l'URL Rewriting). Pour ça, on va utiliser un fichier `.htaccess`: c'est une liste d'instructions spécifiques à notre projet. Ajoutez à la racine du projet le fichier suivant (**n'oubliez pas le "point" dans le nom de fichier !**) :
+
+`.htaccess`
+```bash
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . index.php [L]
+```
+
+> Ça semble être un moment idéal pour faire un commit, par exemple appelé "Add htaccess for URL Rewriting".
 
 ## 4. Nos premières routes
+> Vérifiez bien que vos fichiers soient bien tous sauvegardés (et éventuellement commités) : à partir de maintenant, on va utiliser des fonctions avancées de l'éditeur de texte qui vont nous faciliter la vie, mais il va falloir faire preuve de beaucoup de rigueur.
+
+Testons tout cela ! Avant toute chose : **UTILISEZ L'AUTO-COMPLÉTION !** C'est vraiment obligatoire en POO. En fait, on va commencer à taper le nom de nos classes, et l'éditeur de code va rajouter des bouts de code super utiles. Donc en étant vigileants, dans `routes.php`, commencez à saisir :
+
+```php
+// routes.php
+<?php
+
+$router = new Router;
+```
+
+Normalement, en tappant les premières lettres de `Rout...`, une fenêtre d'autocomplétion vous proposait une classe `Router`. Utilisez-la ! Quand la fenêtre apparaît, séléctionnez la classe voulue avec les flèches du clavier si nécessaire, et appuyez sur `Entrée` ou `Tab`.
+
+Si les choses ont bien fonctionné, vous devriez avoir la ligne `use Bramus\Router\Router;` qui a apparu. Appelez-moi immédiatement si ça n'a pas fonctionné avant de poursuivre.
+
+### Écrire une route
+Commençons tout de suite ! Créons une première route, par exemple `/hello`, ce qui correspond à, par exemple, quelque chose comme `http://localhost:8000/projets/hb-locatcars/hello` (votre dossier projet + la route). En prod, ça représenterait `example.com/hello`.
+
+Dans `routes.php` :
+
+```php
+use Bramus\Router\Router;
+
+$router = new Router;
+
+// Quand je vais sur "/hello", j'effectue l'action suivante, qui est définie
+// dans la fonction anonyme notée juste après : function() { /* action */ } 
+$router->get('/hello', function() { 
+    echo "Hello world !";
+});
+
+$router->run(); # À ne jamais oublier sinon le routeur ne se lance pas !
+```
+Testez ! Allez sur l'URL `/hello` et vérifiez que `Hello world!` s'affiche.
 
 ## 5. Utiliser des templates avec Twig
 
