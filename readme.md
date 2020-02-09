@@ -219,6 +219,18 @@ $router->run(); # À ne jamais oublier sinon le routeur ne se lance pas !
 ```
 Testez ! Allez sur l'URL `/hello` et vérifiez que `Hello world!` s'affiche.
 
+### Oulà, qu'est-ce qu'il vient de se passer au juste ?
+
+Bon, voilà un comportement curieux. On est allé sur `/hello` (qui n'est pas `hello.php`) et quelque chose s'est affiché. Encore une fois, `hello.php` n'existe pas.
+
+- En fait, l'application est allée dans `index.php`. Ce fichier appelle juste la configuration `config.php`.
+- Dans la configuration, on demande d'importer toutes les classes installées avec Composer (dont notre router)
+- Et notre fichier contenant nos routes, `routes.php`.
+- Dans notre fichier de routes, on a dit : "lorsque l'utilisateur va sur notre site, sur le chemin `/hello`, fais quelque chose".
+- Ce quelque chose, c'est : `echo "Hello world";` !
+
+Dorénavant, on ne va plus coder comme avant, avec une page par URL : notre routeur va être au centre de l'application !
+
 ## 5. Utiliser des templates avec Twig
 
 ## 6. Utiliser des contrôleurs
