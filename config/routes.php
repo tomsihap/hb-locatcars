@@ -1,15 +1,13 @@
 <?php
 
-use App\Controller\UserController;
-use App\Controller\UsersController;
-use Bramus\Router\Router;
+$router = $container->getRouter();
 
-$router = new Router;
-
-$router->get('/hello', function() {
-    echo "hello world";
+$router->get('/about', function() {
+    echo "A propos de ce site.";
 });
 
-
+$router->get('/', function() {
+    echo "bienvenue sur mon site en MVC";
+});
 
 $router->run();

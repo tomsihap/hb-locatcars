@@ -11,6 +11,7 @@ class ServiceContainer {
         if ($this->router === null) {
             $this->router = new Router;
         }
+
         return $this->router;
     }
 }
