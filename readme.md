@@ -229,14 +229,140 @@ Bon, voilà un comportement curieux. On est allé sur `/hello` (qui n'est pas `h
 - Dans notre fichier de routes, on a dit : "lorsque l'utilisateur va sur notre site, sur le chemin `/hello`, fais quelque chose".
 - Ce quelque chose, c'est : `echo "Hello world";` !
 
-Dorénavant, on ne va plus coder comme avant, avec une page par URL : notre routeur va être au centre de l'application !
+Dorénavant, on ne va plus coder comme avant, avec une page par URL, mais on va déclarer nos routes dans un fichier qui jouera le chef d'orchestre en indiquant quelle route fait quoi : notre routeur va être au centre de l'application !
 
-## 5. Utiliser des templates avec Twig
+## 5. Le service container et les namespaces
+Un autre point de configuration : les namespaces. On va vu que l'autoloader de Composer importait les classes très facilement, nous n'avons eu qu'à require l'autoloader et les classes sont d'elle-mêmes importées.
 
-## 6. Utiliser des contrôleurs
+Pour l'exemple, on va créer notre Service Container : en effet, nous avons utilisé notre routeur tel quel mais normalement, c'est le rôle du containeur de services de nous donner le routeur, et pas à nous de faire `new Router`.
 
-## 7. Créer le modèle de données
+Ce serait super de pouvoir faire exactement la même chose avec les classes de notre création ! Et c'est ce que nous allons faire. En fait, nous allons utiliser l'autoloader de Composer pour importer nos classes **partout** dans le projet sans avoir à les `require` à la main !
 
-## 8. Créer les services
+> Rappel : les normes PSR (PHP Standard Recommandations) : https://www.php-fig.org/psr/
 
-## 9. Utiliser les services pour se connecter à la base de données
+Pour cela, nous utiliserons une norme PSR-4 qui nous permet d'importer nos classes automatiquement via un autoloader. Ça demande un peu de rigueur, mais ça nous évite de la configuration (`Convention Over Conviguration`, "la convention avant la configuration").
+
+En fait, on va dire à PHP que nos classes se situent toutes dans des sortes de dossiers virtuels. Pourquoi virtuels ? Parce que mon chemin vers ma classe peut être autant `src/service/ServiceController.php` que `lib/services/ServiceController.php` que `libraries/classes/ServiceController.php`, pour PHP, je veux que le chemin soit toujours le même, disons `App/Service/ServiceContainer`.
+
+On commence par expliquer ces chemins-là à PHP en modifiant le fichier `composer.json` ainsi (attention, pas de commentaires possibles dans un fichier json):
+
+```json
+{
+    "require": {
+        "bramus/router": "^1.4",
+        "twig/twig": "^3.0"
+    },
+
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/",
+            "Controller\\": "controller/",
+            "Model\\": "model/"
+        }
+    }
+}
+```
+
+J'indique que, pour PHP :
+- mon dossier `src` sera virtuellement nommé `App`
+- mon dossier `controller` sera virtuellement nommé `Controller`
+- mon dossier `model` sera virtuellement nommé `Model`
+
+Et voilà !
+
+Créons notre Service Container :
+
+```php
+// /src/service/ServiceContainer.php
+namespace App\Service;
+
+class ServiceContainer {
+
+}
+```
+
+C'est une simple classe comme on sait le faire dorénavant, mais avec une instruction un peu nouvelle : le namespace !
+
+Grâce à ça, on précise à PHP que ce fichier se trouve dans le chemin virtuel `App/Controller` (donc le chemin réel `src/service`).
+
+Et comment on utilise ça ? Modifions notre `config.php` et importons notre service container. **Attention :** comme toujours, UTILISEZ l'auto-complétion **obligatoirement** !
+
+```php
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/routes.php';
+
+$container = new ServiceContainer;
+```
+
+En tappant ce code, normalement la ligne `use App\Service\ServiceContainer;` s'est ajoutée automatiquement ! À quoi correspond-elle ? Au namespace que nous avons donné à notre classe.
+
+Dorénavant, nous n'avons plus besoin de faire de `require_once...` pour importer les classes : il suffit de donner à PHP le chemin virtuel (le namespace) de la classe dans le fichier de la classe, et c'est tout ! En utilisant l'autocomplétion, la classe sera importée automatiquement au besoin, grâce à l'instruction `use`.
+
+### Le Service Container
+
+Dans notre container de services, ajoutons notre routeur. Voici le schéma pour tous les services à rajouter :
+
+1. Dans la classe: on ajoute un attribut privé qui correspond au service
+2. Dans la classe: on ajoute un getter dans le container, qui instancie le service avec éventuellement ses configurations si besoin (PDO par exemple)
+3. Dans le getter: on teste si le service existe. Si ça n'est pas le cas, on l'instancie. Sinon, on le retourne.
+
+Voilà le schéma de base à reproduire à chaque nouveau service :
+
+```php
+namespace App\Service;
+
+use Bramus\Router\Router;
+
+class ServiceContainer {
+
+    private $router;
+
+    public function getRouter() {
+        if ($this->router === null) {
+            $this->router = new Router;
+        }
+        return $this->router;
+    }
+}
+```
+
+Remarquez que notre routeur a bien été importé car nous avons utilisé l'auto-complétion !
+
+### Modifications de fichiers
+
+Modifions maintenant les fichiers `config.php` et `routes.php` pour prendre en compte le service container (promis, on n'aura plus vraiment à modifier nos fichiers par la suite) :
+
+```php
+// config.php
+<?php
+
+use App\Service\ServiceContainer;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/routes.php';
+
+$container = new ServiceContainer;
+```
+
+```php
+// routes.php
+<?php
+
+$router = $container->getRouter();
+
+$router->get('/hello', function() {
+    echo "Hello world";
+});
+
+$router->run();
+
+```
+
+## 6. Utiliser des templates avec Twig
+
+## 7. Utiliser des contrôleurs
+
+## 8. Créer le modèle de données
+## 9. Créer les services
+
+## 10. Utiliser les services pour se connecter à la base de données
