@@ -1,5 +1,5 @@
 <?php
-// src/model/Car.php
+namespace App\Model;
 
 class Car {
     private $id;
