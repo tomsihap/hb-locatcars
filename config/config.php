@@ -1,5 +1,6 @@
 <?php
 
+use App\Service\CarManager;
 use App\Service\ServiceContainer;
 
 $configuration = [
@@ -14,4 +15,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 $container = new ServiceContainer($configuration);
 
-require_once __DIR__ . '/routes.php';
+$carManager = new CarManager;
+dd($carManager->findAll());
+
+//require_once __DIR__ . '/routes.php';
