@@ -2,22 +2,16 @@
 
 namespace App\Controller;
 
-class CarsController {
+class CarsController extends AbstractController {
 
     public function index() {
+        $cars = $this->container->getCarManager()->findAll();
 
-        $cars = [
-            [
-                "brand" => "Ford",
-                "model" => "Fiesta",
-            ],
-            [
-                "brand" => "Citroën",
-                "model" => "C3",
-            ],
-        ];
+        echo $this->container->getTwig()->render('/cars/index.html.twig', [
+            'cars'      => $cars,
+            'prenom'    => "Thomas"
+        ]);
 
-        include_once __DIR__ . '/../../template/cars/index.php';
     }
 
     public function show(int $id) {

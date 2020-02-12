@@ -3,6 +3,9 @@ namespace App\Service;
 
 use Bramus\Router\Router;
 use PDO;
+use Twig\Environment;
+use Twig\Error\Error;
+use Twig\Loader\FilesystemLoader;
 
 class ServiceContainer {
 
@@ -10,6 +13,7 @@ class ServiceContainer {
     private $router;
     private $pdo;
     private $carManager;
+    private $twig;
 
     public function __construct(array $configuration) {
         $this->configuration = $configuration;
@@ -42,5 +46,22 @@ class ServiceContainer {
         }
 
         return $this->carManager;
+    }
+
+    public function getTwig() {
+
+        if ($this->twig === null) {
+            try {
+
+                $loader = new FilesystemLoader(__DIR__ . '/../../template');
+                $twig = new Environment($loader);
+                $this->twig = $twig;
+            }
+            catch(Error $e) {
+                dd($e);
+            }
+        }
+        return $this->twig;
+
     }
 }
