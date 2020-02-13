@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Voiture : {{ car.brand }} {{ car.model }}
+{% endblock %}
+
+{% block content %}
+    {{ car.brand }} {{ car.model }}
+
+    <a class"btn btn-warning" href="{{ env.base_path ~ '/cars/' ~ car.id ~ '/edit' }}">Éditer</a>
+{% endblock %}

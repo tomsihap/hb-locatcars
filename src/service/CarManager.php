@@ -53,6 +53,15 @@ class CarManager implements ManagerInterface {
      */
     public function findOneById(int $id)
     {
+        $query = "SELECT * FROM car WHERE id = :id";
+        $statement = $this->pdo->prepare($query);
+        $statement->execute(['id' => $id]);
+
+        $data = $statement->fetch(PDO::FETCH_ASSOC);
+
+        $car = $this->arrayToObject($data);
+
+        return $car;
     }
 
     /**
@@ -62,5 +71,34 @@ class CarManager implements ManagerInterface {
      */
     public function findByField(string $field, string $value)
     {
+    }
+
+    /**
+     * @param array $data
+     */
+    public function create(array $data) {
+        $query = "INSERT INTO car(brand, model) VALUES(:brand, :model)";
+
+        $statement = $this->pdo->prepare($query);
+        $statement->execute([
+            'brand' => $data['brand'],
+            'model' => $data['model']
+        ]);
+    }
+
+    /**
+     * @param array $data
+     */
+    public function update(int $id, array $data)
+    {
+        $query = "UPDATE car SET brand = :brand, model = :model WHERE id = :id";
+
+        $statement = $this->pdo->prepare($query);
+        $statement->execute([
+            'id' => $id,
+            'brand' => $data['brand'],
+            'model' => $data['model']
+        ]);
+
     }
 }
