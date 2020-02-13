@@ -364,14 +364,48 @@ class CarsController extends AbstractController {
 ##### Utiliser la variable "cars" dans Twig
 La documentation complète de Twig est ici : https://twig.symfony.com/doc/3.x/
 ```html
-<ul>
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Liste des voitures
+{% endblock %}
+
+{% block content %}
+    <ul>
         {% for car in cars %}
             <li>
-                {# On créée aussi un lien vers 1 élément #}    
-                <a href="cars/{{car.id}}">
-                {{car.brand}} {{ car.model }}
+
+                {# On créée aussi un lien vers 1 élément #}
+                {# Soit en concaténant notre base_path  + la route de base + l'id #}
+                <a href="{{env.base_path ~ '/cars/' ~ car.id }}">
+                {# Soit on met à la main les variables et le "/cars/" en dur (moins propre) #}
+                <a href="{{env.base_path}}/cars/{{car.id}}">
+                    {{ car.brand }} {{car.model }}
                 </a>
             </li>
         {% endfor %}
     </ul>
+{% endblock %}
 ```
+
+
+### 9. Gérer les formulaires
+Toujours le même ordre que d'habitude:
+1. Créer la route
+2. Créer les controlleurs et méthodes correspondants
+3. Gérer les données dans les méthodes des controlleurs, grâce aux services
+4. Afficher une vue si nécessaire
+
+5. Créer une route GET d'affichage et formulaire et POST de réception de formulaire :
+```php
+$router->get('/cars/new', 'CarsController@new');
+$router->post('/cars', 'CarsController@create');
+```
+
+2. Créer les méthodes annoncées dans le routeur (`public function new()` et `public function create()`) dans le bon controller.
+
+3. La route `/cars/new` ne doit QUE afficher une page formulaire : dans la méthode, retournez simplement une vue Twig (nommeée `new.html.twig`), et mettez un formulaire dans cette vue.
+
+4. Le formulaire doit pointer en POST vers `/cars`.
+
+5. Dans l'action de la route `POST /cars`, donc `public function create()`, faites un var_dump de `$_POST`.

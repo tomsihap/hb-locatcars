@@ -55,6 +55,8 @@ class ServiceContainer {
 
                 $loader = new FilesystemLoader(__DIR__ . '/../../template');
                 $twig = new Environment($loader);
+                $twig->addGlobal('env', $this->configuration['env']);
+
                 $this->twig = $twig;
             }
             catch(Error $e) {

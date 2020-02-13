@@ -7,6 +7,9 @@ $configuration = [
         'dsn'      => 'mysql:dbname=hblocatcars;host=localhost;port=8889;charset=utf8',
         'username' => 'root',
         'password' => 'root',
+    ],
+    'env' => [
+        'base_path' => 'http://localhost:8888/tp-poo-mvc/'
     ]
 ];
 
