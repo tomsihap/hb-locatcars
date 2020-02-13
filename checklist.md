@@ -64,10 +64,18 @@ class ServiceContainer {
 
 
 ### 1. Créer la route
+
 Dans `routes.php`:
 ```php
+// Cas d'une route simple sans variables
 $router->get('/cars', 'CarsController@index');
+
+// Cas d'une route avec variables
+// On met une regex pour dire ce qu'on veut matcher dans l'URL (ici, un ID, donc numérique, la regex est \d+)
+// La liste des possibilité est disponible dans la doc de bramus/router : https://github.com/bramus/router
+$router->get('/cars/(\d+)', 'CarsController@show);
 ```
+
 
 ### 2. Créer le controller :
 
@@ -79,6 +87,7 @@ namespace App\Controller;
 class CarsController extends AbstractController {
 
     // La méthode appelée par la route /cars
+    // Cas d'une route sans variable
     public function index() {
 
         // Les voitures mises "en dur" avant de les récupérer réellement
@@ -95,6 +104,27 @@ class CarsController extends AbstractController {
 
         // On affiche en brut les données avant d'appeler la vue réellement
         var_dump($cars);
+    }
+
+    /**
+     * Cas d'une route avec variable
+     * La fonction prend un $id en paramètres. En fait, il est passé par la route
+     * "cars/(\d+)" qui prend un nombre en paramètres (cars/1, cars/2, cars/53...)
+     * 
+     * NOTE : TOUT EST AU SINGULIER, ON PARLE DE 1 CAR !
+     */
+    public function show(int $id) {
+
+        // Comme toujours :
+        // 1. On récupère les données
+        $car = $this->container->getCarManager()->findOneById($id);
+
+        // 2.  On traite les données si besoin (ici, pas besoin)
+
+        // 3. On affiche les données
+        echo $this->container->getTwig()->render('/cars/show.html.twig', [
+            'car'      => $car,
+        ]);
     }
 }
 ```
@@ -237,6 +267,7 @@ class CarManager implements ManagerInterface {
      */
     public function findOneById(int $id)
     {
+        // À remplir pour la route /cars/(\d+) puisqu'on l'appelle dans CarsController::show
     }
 
     /**
@@ -335,7 +366,12 @@ La documentation complète de Twig est ici : https://twig.symfony.com/doc/3.x/
 ```html
 <ul>
         {% for car in cars %}
-            <li>{{car.brand}} {{ car.model }}</li>
+            <li>
+                {# On créée aussi un lien vers 1 élément #}    
+                <a href="cars/{{car.id}}">
+                {{car.brand}} {{ car.model }}
+                </a>
+            </li>
         {% endfor %}
     </ul>
 ```
